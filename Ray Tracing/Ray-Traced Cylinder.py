@@ -222,8 +222,8 @@ def VirtualEnvironment():
 wavelength = 0.005 * 10
 
 # number of pixels the screen will be split into
-width = 25
-height = 25
+width = 250
+height = 250
 
 camera = np.array([0, 0, 20])
 ratio = float(width) / height
