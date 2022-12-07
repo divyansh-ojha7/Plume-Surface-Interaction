@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import trimesh
 
 def normalize(vector):
     return vector / np.linalg.norm(vector)
@@ -17,6 +18,34 @@ def sphere_intersect(center, radius, ray_origin, ray_direction):
         if t1 > 0 and t2 > 0:
             return min(t1, t2)
     return None
+
+def triangle_intersect(mesh_list, ray_origins, ray_directions):
+    locations = np.full((len(ray_origins), 3), np.inf)
+    normals = np.full((len(ray_origins), 3), 0.0)
+    intersected_mesh = np.full((len(ray_origins), 1), np.nan)
+
+    for i in range(0, len(mesh_list)):
+        active_mesh = mesh_list[i]
+        active_locations = np.full((len(ray_origins), 3), np.inf)
+        active_normals = np.full((len(ray_origins), 3), 0.0)
+        active_index_tri = np.full((len(ray_origins), 1), np.nan)
+        shortlist_active_locations, index_ray, shortlist_active_index_tri =active_mesh.ray.intersects_location(ray_origins, ray_directions, multiple_hits=False)
+
+        for k, index in enumerate(index_ray):
+            # print(active_locations[index])
+            # print(shortlist_active_locations[k])
+            active_locations[index] = shortlist_active_locations[k]
+            active_normals[index] = active_mesh.face_normals[shortlist_active_index_tri[k]]
+
+        mask = np.abs(active_locations - ray_origins) < np.abs(locations - ray_origins)
+        # print(mask)
+        locations[mask] = active_locations[mask]
+        normals[mask] = active_normals[mask]
+        # print(normals)
+        # print(active_normals)
+        intersected_mesh[np.transpose(mask[:, 0])] = i
+
+    return locations, normals, intersected_mesh
 
 def nearest_intersected_object(objects, ray_origin, ray_direction):
     distances = [sphere_intersect(obj['center'], obj['radius'], ray_origin, ray_direction) for obj in objects]
@@ -37,6 +66,9 @@ camera = np.array([0, 0, 1])
 ratio = float(width) / height
 screen = (-1, 1 / ratio, 1, -1 / ratio) # left, top, right, bottom
 
+mesh_list = [trimesh.load('cylinder_4.stl')]
+
+
 light = {'position': np.array([5, 5, 5]), 'ambient': np.array([1, 1, 1]), 'diffuse': np.array([1, 1, 1]), 'specular': np.array([1, 1, 1]) }
 
 objects = [
@@ -45,6 +77,8 @@ objects = [
     {'center': np.array([-0.3, 0, 0]), 'radius': 0.15, 'ambient': np.array([0, 0.1, 0]), 'diffuse': np.array([0, 0.6, 0]), 'specular': np.array([1, 1, 1]), 'shininess': 100, 'reflection': 0.5 },
     {'center': np.array([0, -9000, 0]), 'radius': 9000 - 0.7, 'ambient': np.array([0.1, 0.1, 0.1]), 'diffuse': np.array([0.6, 0.6, 0.6]), 'specular': np.array([1, 1, 1]), 'shininess': 100, 'reflection': 0.5 }
 ]
+objects = {'file': 'cylinder_4.stl', 'ambient': np.array([0.1, 0.1, 0.1]), 'diffuse': np.array([0.5, 0.5, 0.5]), 'specular': np.array([1, 1, 1]), 'shininess': 100, 'reflection': 0.5 }
+
 
 image = np.zeros((height, width, 3))
 for i, y in enumerate(np.linspace(screen[1], screen[3], height)):
