@@ -60,10 +60,11 @@ def PowerVsDistance(power_type):
     for x in distance:
         if x != math.inf:
             new_dis.append(distance[i])
-            if power_type == "Power":
-                new_pow.append(power[i])
-            if power_type == "Phasor":
-                new_pow.append(phasor_angle[i])
+            new_pow.append(phasor[i])
+            # if power_type == "Power":
+            #     new_pow.append(power[i])
+            # if power_type == "Phasor":
+            #     new_pow.append(phasor[i])
         i += 1
     x = new_dis
     y_data = [0] * 20
@@ -78,46 +79,24 @@ def PowerVsDistance(power_type):
             count += 1
 
     round_to_hundrends = [round(num, 1) for num in bins]
+
+    new_y_data = []
+    for i in y_data:
+        if not i:
+            new_y_data.append(i)
+        else:
+            new_y_data.append(i[0])
+    if power_type == "Power":
+        for j in range(0, len(new_y_data)):
+            new_y_data[j] = np.abs(new_y_data[j])
+    if power_type == "Phasor":
+        for j in range(0, len(new_y_data)):
+            new_y_data[j] = np.angle(new_y_data[j])
+
     fig, ax = plt.subplots(figsize=(10, 7))
-    sns.barplot(x=round_to_hundrends,y=y_data,ax=ax, palette = 'plasma')
+    sns.barplot(x=round_to_hundrends,y=new_y_data,ax=ax, palette = 'plasma')
     ax.tick_params(labelsize=8, length=0)
     plt.box(False)  # removing border lines
-
-
-    # # Creating histogram
-    # fig, axs = plt.subplots(1, 1,
-    #                         figsize=(10, 7),
-    #                         tight_layout=True)
-    #
-    # # Remove axes splines
-    # for s in ['top', 'bottom', 'left', 'right']:
-    #     axs.spines[s].set_visible(False)
-    #
-    # # Remove x, y ticks
-    # axs.xaxis.set_ticks_position('none')
-    # axs.yaxis.set_ticks_position('none')
-    #
-    # # Add padding between axes and labels
-    # axs.xaxis.set_tick_params(pad=5)
-    # axs.yaxis.set_tick_params(pad=10)
-    #
-    # # Add x, y gridlines
-    # axs.grid(b=True, color='grey',
-    #          linestyle='-.', linewidth=0.5,
-    #          alpha=0.6)
-    #
-    # # Creating histogram
-    # tests = [10,6,10,2]
-    # N, bins, patches = axs.hist(x, bins=20)
-    # # plt.ylim((None, 100))
-    #
-    # # Setting color
-    # fracs = ((N ** (1 / 5)) / N.max())
-    # norm = colors.Normalize(fracs.min(), fracs.max())
-    #
-    # for thisfrac, thispatch in zip(fracs, patches):
-    #     color = plt.cm.viridis(norm(thisfrac))
-    #     thispatch.set_facecolor(color)
 
     # Adding extra features
     plt.xlabel("Distance")
@@ -294,6 +273,8 @@ for i, y in enumerate(np.linspace(screen[1], screen[3], height)):
             if math.isnan(local_intersected_mesh_index):
                 power.append(0)
                 phasor_angle.append(0)
+                distance.append(math.inf)
+                phasor.append(np.array(0+0j))
                 break
             int(local_intersected_mesh_index)
             distance.append(np.linalg.norm(intersection - ray_origins[0]))
@@ -318,6 +299,7 @@ for i, y in enumerate(np.linspace(screen[1], screen[3], height)):
             H = normalize(intersection_to_light + intersection_to_camera)  # H is halfway vector in the Blinn−Phong reflection model
 
             illumination += objects[int(local_intersected_mesh_index[0])].get('specular') * (light['specular'] * (1/(intersection_to_light_distance**2))) * np.dot(normal, H) ** (objects[int(local_intersected_mesh_index[0])].get('shininess') / 4) * np.exp(1j*2*np.pi*total_distance/wavelength)
+
             # reflection
             power.append(np.abs(illumination))
             phasor_angle.append(np.angle(illumination))
@@ -331,8 +313,7 @@ for i, y in enumerate(np.linspace(screen[1], screen[3], height)):
 plt.imsave('triangle_mesh_power.png', np.dstack([image_power, image_power, image_power]))
 plt.imsave('triangle_mesh_phasor.png', np.dstack([image_phasor, image_phasor, image_phasor]))
 
-print(len(power))
-print(len(distance))
-# PowerVsDistance("Power")
-# PowerVsDistance("Phasor")
+
+PowerVsDistance("Power")
+PowerVsDistance("Phasor")
 # VirtualEnvironment()
